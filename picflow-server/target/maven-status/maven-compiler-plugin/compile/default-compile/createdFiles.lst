@@ -1,0 +1,6 @@
+com/picflow/server/service/AppVersionService.class
+com/picflow/server/entity/AppVersion.class
+com/picflow/server/controller/AppVersionController.class
+com/picflow/server/mapper/AppVersionMapper.class
+com/picflow/server/service/impl/AppVersionServiceImpl.class
+com/picflow/server/controller/SseController.class
