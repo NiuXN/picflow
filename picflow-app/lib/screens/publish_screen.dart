@@ -442,7 +442,6 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
         'image_url': uploadResult?.url ?? widget.imagePath,
         'thumbnail_url': uploadResult?.thumbnailUrl,
         'tags': _selectedTags,
-        'tags': _selectedTags,
         'frame_type': widget.frameType,
         'aspect_ratio': widget.aspectRatio,
         'bg_color': widget.bgColor,
