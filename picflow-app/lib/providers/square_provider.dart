@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/artwork_model.dart';
+import '../services/artwork_service.dart';
 import '../services/social_service.dart';
 import 'artwork_service_provider.dart';
 

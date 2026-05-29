@@ -132,9 +132,67 @@ CREATE TABLE IF NOT EXISTS app_versions (
     created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '发布时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='App版本管理表';
 
+-- ========== 标签管理表 ==========
+CREATE TABLE IF NOT EXISTS tags (
+    id          BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '标签ID',
+    name        VARCHAR(100) NOT NULL COMMENT '标签名称',
+    description VARCHAR(200) COMMENT '标签描述',
+    sort_order  INT DEFAULT 0 COMMENT '排序权重，越小越靠前',
+    enabled     TINYINT(1) DEFAULT 1 COMMENT '是否启用：0禁用 1启用',
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    UNIQUE KEY uk_tags_name (name) COMMENT '标签名唯一'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='标签管理表';
+
+-- ========== App 配置表（相框/滤镜等动态配置） ==========
+CREATE TABLE IF NOT EXISTS app_configs (
+    id           BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '配置ID',
+    config_type  VARCHAR(50) NOT NULL COMMENT '配置类型：frame/filter/sort等',
+    config_key   VARCHAR(100) NOT NULL COMMENT '配置键名',
+    config_value TEXT COMMENT '配置值（JSON格式）',
+    label        VARCHAR(100) COMMENT '显示名称',
+    description  VARCHAR(200) COMMENT '描述/副标题',
+    sort_order   INT DEFAULT 0 COMMENT '排序权重，越小越靠前',
+    enabled      TINYINT(1) DEFAULT 1 COMMENT '是否启用：0禁用 1启用',
+    created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    UNIQUE KEY uk_config_type_key (config_type, config_key) COMMENT '类型+键唯一',
+    INDEX idx_config_type (config_type, enabled, sort_order) COMMENT '按类型查询索引'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='App动态配置表';
+
 -- ========== 种子数据 ==========
 -- 密码均为 "password123" 的 BCrypt 哈希
 -- 使用 IGNORE 防止重复重启时插入失败
 INSERT IGNORE INTO users (id, username, password_hash, nickname, role) VALUES
 (1, 'admin', '$2b$10$cUkJeRh7KjzggFoO6Tz0c.DbLLL2jVzpXK9vlhfs808xChROXA5SK', '管理员', 'admin'),
 (2, 'demo', '$2b$10$cUkJeRh7KjzggFoO6Tz0c.DbLLL2jVzpXK9vlhfs808xChROXA5SK', '演示用户', 'user');
+
+-- 标签种子数据
+INSERT IGNORE INTO tags (name, description, sort_order) VALUES
+('胶片', '胶片风格摄影', 1),
+('治愈', '治愈系温暖风格', 2),
+('简约', '极简主义风格', 3),
+('复古', '复古怀旧风格', 4),
+('风景', '自然风光', 5),
+('人物', '人像摄影', 6),
+('美食', '美食记录', 7),
+('日常', '日常生活记录', 8),
+('旅行', '旅行见闻', 9),
+('黑白', '黑白摄影', 10);
+
+-- 相框配置种子数据
+INSERT IGNORE INTO app_configs (config_type, config_key, config_value, label, description, sort_order) VALUES
+('frame', 'minimal', '{"isPro":false}', '极简留白', '纯比例留白', 1),
+('frame', 'exif', '{"isPro":false}', '基础参数', 'EXIF 信息', 2),
+('frame', 'polaroid', '{"isPro":false}', '拍立得风', '1:1 裁切', 3),
+('frame', 'proFilm', '{"isPro":true}', '专业底片', '徕卡风格', 4),
+('frame', 'circle', '{"isPro":false}', '圆形取景', '复古镜头', 5);
+
+-- 滤镜配置种子数据
+INSERT IGNORE INTO app_configs (config_type, config_key, config_value, label, description, sort_order) VALUES
+('filter', 'none', '{"matrix":[1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0]}', '原图', '无滤镜', 1),
+('filter', 'cream', '{"matrix":[1.05,0.02,0,0,8,0.02,1.02,0,0,4,0,0.02,0.95,0,2,0,0,0,1,0]}', '奶油', '暖白柔和', 2),
+('filter', 'film', '{"matrix":[0.9,0.05,0.05,0,18,0.05,0.85,0.05,0,12,0.05,0.05,0.75,0,8,0,0,0,0.95,0]}', '胶片', '复古褪色', 3),
+('filter', 'mono', '{"matrix":[0.33,0.34,0.33,0,0,0.33,0.34,0.33,0,0,0.33,0.34,0.33,0,0,0,0,0,1,0]}', '黑白', '经典', 4),
+('filter', 'warm', '{"matrix":[1.1,0.05,0,0,10,0.05,0.95,0,0,6,0,0,0.8,0,0,0,0,0,1,0]}', '暖阳', '金色暖调', 5),
+('filter', 'cool', '{"matrix":[0.9,0,0,0,0,0,0.95,0.02,0,0,0,0.02,1.1,0,10,0,0,0,1,0]}', '冷调', '清冷蓝调', 6),
+('filter', 'retro', '{"matrix":[1.0,0.1,0.05,0,20,0.05,0.85,0.05,0,10,0.02,0.05,0.7,0,0,0,0,0,0.92,0]}', '复古', '怀旧棕调', 7);

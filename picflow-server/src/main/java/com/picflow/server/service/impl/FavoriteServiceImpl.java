@@ -79,4 +79,9 @@ public class FavoriteServiceImpl extends ServiceImpl<FavoriteMapper, Favorite> i
                 .map(Favorite::getArtworkId)
                 .collect(Collectors.toSet());
     }
+
+    @Override
+    public long getTotalFavoritesByUser(Long userId) {
+        return this.count(new LambdaQueryWrapper<Favorite>().eq(Favorite::getUserId, userId));
+    }
 }

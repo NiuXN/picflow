@@ -28,6 +28,15 @@
           <el-menu-item index="/users">用户管理</el-menu-item>
         </el-sub-menu>
 
+        <el-sub-menu index="config">
+          <template #title>
+            <el-icon><Menu /></el-icon>
+            <span>配置管理</span>
+          </template>
+          <el-menu-item index="/tags">标签管理</el-menu-item>
+          <el-menu-item index="/configs">相框/滤镜</el-menu-item>
+        </el-sub-menu>
+
         <el-sub-menu index="system">
           <template #title>
             <el-icon><Setting /></el-icon>

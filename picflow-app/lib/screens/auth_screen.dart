@@ -71,10 +71,15 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     authNotifier.clearError();
                     setState(() => _tabIndex = 0);
                   }),
-                  const SizedBox(width: 32),
-                  _TabItem(label: '注册', isActive: _tabIndex == 1, onTap: () {
+                  const SizedBox(width: 24),
+                  _TabItem(label: '手机登录', isActive: _tabIndex == 1, onTap: () {
                     authNotifier.clearError();
                     setState(() => _tabIndex = 1);
+                  }),
+                  const SizedBox(width: 24),
+                  _TabItem(label: '注册', isActive: _tabIndex == 2, onTap: () {
+                    authNotifier.clearError();
+                    setState(() => _tabIndex = 2);
                   }),
                 ],
               ),
@@ -209,10 +214,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     setState(() => _codeSending = true);
     try {
       final dio = Dio(BaseOptions(baseUrl: ApiConfig.baseUrl));
-      final res = await dio.post('/auth/send-code', data: {'phone': phone});
-      final code = res.data['data']?['code'] ?? '';
+      await dio.post('/auth/send-code', data: {'phone': phone});
       setState(() { _codeSending = false; _countdown = 60; });
-      if (mounted) AppSnackbar.success(context, '验证码已发送（开发环境: $code）');
+      if (mounted) AppSnackbar.success(context, '验证码已发送');
       _startCountdown();
     } catch (e) {
       if (mounted) setState(() => _codeSending = false);

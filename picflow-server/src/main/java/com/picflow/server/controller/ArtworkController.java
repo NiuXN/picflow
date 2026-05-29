@@ -14,6 +14,10 @@ import com.picflow.server.service.ArtworkService;
 import com.picflow.server.service.CommentService;
 import com.picflow.server.service.FavoriteService;
 import com.picflow.server.service.LikeService;
+import com.picflow.server.service.TagService;
+import com.picflow.server.service.AppConfigService;
+import com.picflow.server.entity.Tag;
+import com.picflow.server.entity.AppConfig;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -22,6 +26,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -34,6 +39,8 @@ public class ArtworkController {
     private final CommentService commentService;
     private final LikeService likeService;
     private final FavoriteService favoriteService;
+    private final TagService tagService;
+    private final AppConfigService appConfigService;
 
     @GetMapping
     @Operation(summary = "获取作品列表")
@@ -60,7 +67,8 @@ public class ArtworkController {
                                     @Valid @RequestBody ArtworkRequest request) {
         Artwork artwork = artworkService.publishArtwork(
                 userId, request.getTitle(), request.getDescription(),
-                request.getImageUrl(), request.getTags() != null ? request.getTags().toString() : "[]",
+                request.getImageUrl(), request.getThumbnailUrl(),
+                request.getTags() != null ? request.getTags().toString() : "[]",
                 request.getFrameType(), request.getAspectRatio(),
                 request.getBgColor(), request.getWatermarkText(),
                 request.getFilter());
@@ -90,6 +98,21 @@ public class ArtworkController {
         }
         artworkService.removeById(id);
         return Result.ok(Map.of("message", "删除成功"));
+    }
+
+    @GetMapping("/tags")
+    @Operation(summary = "获取所有标签")
+    public Result<Map<String, Object>> tags() {
+        List<Tag> tags = tagService.getEnabledTags();
+        List<String> tagNames = tags.stream().map(Tag::getName).toList();
+        return Result.ok(Map.of("items", tagNames));
+    }
+
+    @GetMapping("/configs")
+    @Operation(summary = "获取App配置（相框/滤镜）")
+    public Result<Map<String, Object>> configs(@RequestParam String type) {
+        List<AppConfig> configs = appConfigService.getEnabledConfigsByType(type);
+        return Result.ok(Map.of("items", configs));
     }
 
     @GetMapping("/my")

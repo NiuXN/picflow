@@ -16,6 +16,8 @@ public class ArtworkRequest {
     @NotBlank(message = "图片地址不能为空")
     private String imageUrl;
 
+    private String thumbnailUrl;
+
     private List<String> tags;
 
     private String frameType;

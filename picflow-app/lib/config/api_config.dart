@@ -1,12 +1,12 @@
+import 'package:flutter/foundation.dart';
+
 class ApiConfig {
   ApiConfig._();
 
-  /// 后端 API 基础地址
-  /// 开发环境使用 localhost，部署时改为生产地址
-  static const String baseUrl = 'http://localhost:8080/v1';
+  static const String _devBaseUrl = 'http://localhost:8080/v1';
+  static const String _prodBaseUrl = 'https://api.picflow.app/v1';
 
-  /// 生产环境 API 地址（部署时切换）
-  static const String productionBaseUrl = 'https://api.picflow.app/v1';
+  static String get baseUrl => kReleaseMode ? _prodBaseUrl : _devBaseUrl;
 
   static const int pageSize = 20;
 

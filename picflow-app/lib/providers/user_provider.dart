@@ -30,7 +30,7 @@ class MyArtworksNotifier extends StateNotifier<MyArtworksState> {
 
   Future<void> load() async {
     state = state.copyWith(isLoading: true);
-    final (artworks, _) = await _service.getArtworks(page: 1);
+    final (artworks, _) = await _service.getMyArtworks(page: 1);
     state = state.copyWith(artworks: artworks, isLoading: false);
   }
 }

@@ -44,6 +44,18 @@ const router = createRouter({
           component: () => import('@/views/versions/VersionList.vue'),
           meta: { title: '版本管理' },
         },
+        {
+          path: 'tags',
+          name: 'Tags',
+          component: () => import('@/views/config/TagList.vue'),
+          meta: { title: '标签管理' },
+        },
+        {
+          path: 'configs',
+          name: 'Configs',
+          component: () => import('@/views/config/ConfigList.vue'),
+          meta: { title: '配置管理' },
+        },
       ],
     },
     {

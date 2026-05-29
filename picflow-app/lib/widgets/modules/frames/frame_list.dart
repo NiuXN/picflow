@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
-import '../../../models/frame_model.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../providers/config_provider.dart';
 import 'frame_card.dart';
 
-class FrameList extends StatelessWidget {
+class FrameList extends ConsumerWidget {
   const FrameList({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final frames = FrameModel.all;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(frameConfigProvider);
+    final frames = state.frames;
 
     return SizedBox(
       height: 180,

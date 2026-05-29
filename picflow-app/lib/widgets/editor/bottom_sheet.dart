@@ -100,17 +100,9 @@ class EditorBottomPanel extends ConsumerWidget {
     final bottomPadding = MediaQuery.of(context).padding.bottom;
     final maxPanelHeight = screenHeight * 0.45;
 
-    debugPrint('[EditorBottomPanel] ====== 布局调试信息 ======');
-    debugPrint('[EditorBottomPanel] 屏幕高度: $screenHeight');
-    debugPrint('[EditorBottomPanel] 底部安全区: $bottomPadding');
-    debugPrint('[EditorBottomPanel] 最大面板高度: $maxPanelHeight');
-    debugPrint('[EditorBottomPanel] 当前选中Tab: ${editorState.editorTab}');
-
     return LayoutBuilder(
       builder: (context, constraints) {
         final availableHeight = constraints.maxHeight;
-
-        debugPrint('[EditorBottomPanel] 可用高度(来自constraints): $availableHeight');
 
         return Container(
           constraints: BoxConstraints(
@@ -147,9 +139,7 @@ class EditorBottomPanel extends ConsumerWidget {
                           duration: const Duration(milliseconds: 200),
                           child: Builder(
                             builder: (context) {
-                              final widget = _getTabWidget(editorState.editorTab);
-                              debugPrint('[EditorBottomPanel] 内容区域widget类型: ${widget.runtimeType}');
-                              return widget;
+                              return _getTabWidget(editorState.editorTab);
                             },
                           ),
                         ),
@@ -169,19 +159,14 @@ class EditorBottomPanel extends ConsumerWidget {
   Widget _getTabWidget(int tabIndex) {
     switch (tabIndex) {
       case 0:
-        debugPrint('[EditorBottomPanel] 显示FrameList');
         return FrameList(key: const ValueKey('frames'));
       case 1:
-        debugPrint('[EditorBottomPanel] 显示LayoutPanel');
         return LayoutPanel(key: const ValueKey('layout'));
       case 2:
-        debugPrint('[EditorBottomPanel] 显示WatermarkPanel');
         return WatermarkPanel(key: const ValueKey('watermark'));
       case 3:
-        debugPrint('[EditorBottomPanel] 显示FilterPanel');
         return FilterPanel(key: const ValueKey('filter'));
       default:
-        debugPrint('[EditorBottomPanel] 默认显示FrameList');
         return FrameList(key: const ValueKey('frames'));
     }
   }

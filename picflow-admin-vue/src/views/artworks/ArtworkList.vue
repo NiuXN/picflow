@@ -38,6 +38,17 @@
           </template>
         </el-table-column>
       </el-table>
+      <div style="display: flex; justify-content: flex-end; margin-top: 16px">
+        <el-pagination
+          v-model:current-page="currentPage"
+          v-model:page-size="pageSize"
+          :page-sizes="[10, 20, 50]"
+          :total="total"
+          layout="total, sizes, prev, pager, next"
+          @size-change="loadData"
+          @current-change="loadData"
+        />
+      </div>
     </el-card>
   </div>
 </template>
@@ -50,6 +61,9 @@ import type { Artwork } from '@/types'
 
 const loading = ref(false)
 const artworks = ref<Artwork[]>([])
+const currentPage = ref(1)
+const pageSize = ref(20)
+const total = ref(0)
 
 function statusType(s: string) {
   if (s === 'published') return 'success'
@@ -65,8 +79,11 @@ function statusLabel(s: string) {
 async function loadData() {
   loading.value = true
   try {
-    const res = await getArtworks()
-    if (res.code === 0) artworks.value = res.data || []
+    const res = await getArtworks(currentPage.value, pageSize.value)
+    if (res.code === 0) {
+      artworks.value = res.data || []
+      total.value = res.total || 0
+    }
   } catch {} finally { loading.value = false }
 }
 

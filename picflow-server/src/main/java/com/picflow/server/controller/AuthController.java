@@ -32,9 +32,15 @@ public class AuthController {
     private final UserService userService;
     private final JwtTokenProvider jwtTokenProvider;
 
-    // 开发环境验证码存储（生产环境应使用 Redis）
-    private final Map<String, String> codeStore = new ConcurrentHashMap<>();
+    private static final long CODE_EXPIRE_SECONDS = 300;
+    private final Map<String, CodeEntry> codeStore = new ConcurrentHashMap<>();
     private final Random random = new Random();
+
+    private record CodeEntry(String code, long expireAt) {
+        boolean isExpired() {
+            return System.currentTimeMillis() > expireAt;
+        }
+    }
 
     @PostMapping("/send-code")
     @Operation(summary = "发送短信验证码")
@@ -44,9 +50,10 @@ public class AuthController {
             return Result.error("请输入正确的手机号");
         }
         String code = String.format("%06d", random.nextInt(1000000));
-        codeStore.put(phone, code);
-        log.info("[SMS] 验证码发送到 {}: {}", phone, code);
-        return Result.ok(Map.of("message", "验证码已发送", "code", code));
+        long expireAt = System.currentTimeMillis() + CODE_EXPIRE_SECONDS * 1000;
+        codeStore.put(phone, new CodeEntry(code, expireAt));
+        log.info("[SMS] 验证码发送到 {}: {} (有效期{}秒)", phone, code, CODE_EXPIRE_SECONDS);
+        return Result.ok(Map.of("message", "验证码已发送"));
     }
 
     @PostMapping("/phone-login")
@@ -59,13 +66,20 @@ public class AuthController {
         if (phone == null || code == null) {
             return Result.error("手机号和验证码不能为空");
         }
-        String stored = codeStore.get(phone);
-        if (stored == null || !stored.equals(code)) {
+        CodeEntry entry = codeStore.get(phone);
+        if (entry == null || !entry.code().equals(code)) {
             return Result.error("验证码错误或已过期");
+        }
+        if (entry.isExpired()) {
+            codeStore.remove(phone);
+            return Result.error("验证码已过期，请重新获取");
         }
         codeStore.remove(phone);
 
         User user = userService.loginByPhone(phone);
+        if (user != null && "banned".equals(user.getStatus())) {
+            return Result.error("账号已被封禁");
+        }
         if (user == null) {
             user = userService.registerByPhone(phone, nickname);
         }
@@ -85,6 +99,9 @@ public class AuthController {
     @Operation(summary = "用户登录")
     public Result<Map<String, Object>> login(@Valid @RequestBody LoginRequest request) {
         User user = userService.getOne(new LambdaQueryWrapper<User>().eq(User::getUsername, request.getUsername()));
+        if (user != null && "banned".equals(user.getStatus())) {
+            return Result.error("账号已被封禁");
+        }
         String token = userService.login(request.getUsername(), request.getPassword());
         return Result.ok(Map.of("token", token, "user", user));
     }
@@ -94,6 +111,13 @@ public class AuthController {
     public Result<User> profile(@AuthenticationPrincipal Long userId) {
         User user = userService.getById(userId);
         return Result.ok(user);
+    }
+
+    @GetMapping("/stats")
+    @Operation(summary = "获取当前用户统计数据")
+    public Result<Map<String, Object>> stats(@AuthenticationPrincipal Long userId) {
+        Map<String, Object> stats = userService.getUserStats(userId);
+        return Result.ok(stats);
     }
 
     @PutMapping("/profile")

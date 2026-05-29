@@ -16,7 +16,7 @@ class ApiResponse<T> {
 class ApiService {
   late final Dio _dio;
 
-  ApiService({bool useMock = false}) {
+  ApiService() {
     _dio = Dio(BaseOptions(
       baseUrl: ApiConfig.baseUrl,
       connectTimeout: ApiConfig.connectTimeout,
@@ -25,12 +25,10 @@ class ApiService {
     ));
 
     _dio.interceptors.add(AuthInterceptor());
-    if (!useMock) {
-      _dio.interceptors.add(LogInterceptor(
-        requestBody: true,
-        responseBody: true,
-      ));
-    }
+    _dio.interceptors.add(LogInterceptor(
+      requestBody: true,
+      responseBody: true,
+    ));
   }
 
   Future<ApiResponse<T>> get<T>({

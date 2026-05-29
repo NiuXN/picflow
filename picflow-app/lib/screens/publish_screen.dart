@@ -37,9 +37,26 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
   final List<String> _selectedTags = [];
+  List<String> _presetTags = [];
   bool _isPublishing = false;
+  bool _tagsLoading = true;
 
-  static const _presetTags = ['胶片', '治愈', '简约', '复古', '风景', '人物', '美食', '日常', '旅行', '黑白'];
+  @override
+  void initState() {
+    super.initState();
+    _loadTags();
+  }
+
+  Future<void> _loadTags() async {
+    final artworkService = ref.read(artworkServiceProvider);
+    final tags = await artworkService.getTags();
+    if (mounted) {
+      setState(() {
+        _presetTags = tags;
+        _tagsLoading = false;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -244,6 +261,14 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
           ),
         ),
         const SizedBox(height: 8),
+        if (_tagsLoading)
+          const Center(child: Padding(
+            padding: EdgeInsets.all(16),
+            child: CircularProgressIndicator(color: AppColors.inversePrimary),
+          ))
+        else if (_presetTags.isEmpty)
+          Text('暂无标签', style: AppTypography.labelSmall.copyWith(color: AppColors.onSurfaceVariant))
+        else
         Wrap(
           spacing: 8,
           runSpacing: 8,
@@ -330,7 +355,7 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
                       height: 14,
                       decoration: BoxDecoration(
                         color: Color(
-                          int.parse(widget.bgColor!.replaceFirst('#', '0xFF')),
+                          int.parse('0xFF${widget.bgColor!.replaceFirst('#', '')}'),
                         ),
                         borderRadius: BorderRadius.circular(4),
                       ),
@@ -400,13 +425,21 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
         imageUrl = await uploadService.uploadImage(File(widget.imagePath!));
       }
 
+      if (imageUrl == null) {
+        if (mounted) {
+          AppSnackbar.error(context, '图片上传失败，请重试');
+        }
+        setState(() => _isPublishing = false);
+        return;
+      }
+
       final artworkService = ref.read(artworkServiceProvider);
       final success = await artworkService.publishArtwork({
         'title': _titleController.text.trim(),
         'description': _descriptionController.text.trim().isNotEmpty
             ? _descriptionController.text.trim()
             : null,
-        'image_url': imageUrl ?? widget.imagePath,
+        'image_url': imageUrl,
         'tags': _selectedTags,
         'frame_type': widget.frameType,
         'aspect_ratio': widget.aspectRatio,

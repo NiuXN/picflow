@@ -35,7 +35,7 @@
     <el-card shadow="never" class="section-card">
       <template #header><span>快捷入口</span></template>
       <el-row :gutter="16">
-        <el-col :span="6" v-for="item in quickLinks" :key="item.path">
+        <el-col :span="4" v-for="item in quickLinks" :key="item.path">
           <el-card shadow="hover" class="quick-link" @click="router.push(item.path)">
             <div class="ql-icon" :style="{ background: item.bg }">{{ item.emoji }}</div>
             <div class="ql-label">{{ item.label }}</div>
@@ -50,7 +50,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { getDashboard } from '@/api/dashboard'
+import { getDashboard, getDashboardTrend } from '@/api/dashboard'
 import type { DashboardStats } from '@/types'
 import VChart from 'vue-echarts'
 import { use } from 'echarts/core'
@@ -63,6 +63,8 @@ use([CanvasRenderer, LineChart, BarChart, GridComponent, TooltipComponent, Legen
 const router = useRouter()
 const loading = ref(true)
 const stats = ref<DashboardStats>({ totalUsers: 0, totalArtworks: 0, todayNew: 0 })
+const trendDates = ref<string[]>([])
+const trendCounts = ref<number[]>([])
 
 const statCards = computed(() => [
   { label: '用户总数', value: stats.value.totalUsers, icon: 'User', color: '#409eff' },
@@ -73,45 +75,33 @@ const statCards = computed(() => [
 const quickLinks = [
   { path: '/artworks', label: '作品审核', desc: '管理用户作品', emoji: '📷', bg: '#ecf5ff' },
   { path: '/users', label: '用户管理', desc: '查看/封禁用户', emoji: '👥', bg: '#f0f9eb' },
-  { path: '/notifications', label: '发布通知', desc: '推送公告消息', emoji: '📢', bg: '#fdf6ec' },
-  { path: '/versions', label: '版本管理', desc: '发布App版本', emoji: '🚀', bg: '#f5f0ff' },
+  { path: '/tags', label: '标签管理', desc: '配置App标签', emoji: '🏷️', bg: '#fdf6ec' },
+  { path: '/configs', label: '相框/滤镜', desc: '配置App功能', emoji: '🎨', bg: '#f5f0ff' },
+  { path: '/notifications', label: '发布通知', desc: '推送公告消息', emoji: '📢', bg: '#fef0f0' },
+  { path: '/versions', label: '版本管理', desc: '发布App版本', emoji: '🚀', bg: '#f0f9eb' },
 ]
-
-const chartDays = computed(() => {
-  const days: string[] = []
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date()
-    d.setDate(d.getDate() - i)
-    days.push(`${d.getMonth() + 1}/${d.getDate()}`)
-  }
-  return days
-})
 
 const chartOption = computed(() => ({
   tooltip: { trigger: 'axis' },
   grid: { left: 50, right: 20, bottom: 30, top: 10 },
-  xAxis: { type: 'category', data: chartDays.value },
+  xAxis: { type: 'category', data: trendDates.value },
   yAxis: { type: 'value', minInterval: 1 },
   series: [{
     name: '新增作品',
     type: 'bar',
-    data: [
-      Math.round(stats.value.todayNew * 0.3),
-      Math.round(stats.value.todayNew * 0.5),
-      Math.round(stats.value.todayNew * 0.7),
-      Math.round(stats.value.todayNew * 0.6),
-      Math.round(stats.value.todayNew * 0.8),
-      Math.round(stats.value.todayNew * 0.9),
-      stats.value.todayNew,
-    ],
+    data: trendCounts.value,
     itemStyle: { color: '#409eff', borderRadius: [6, 6, 0, 0] },
   }],
 }))
 
 onMounted(async () => {
   try {
-    const res = await getDashboard()
-    if (res.code === 0 && res.data) stats.value = res.data
+    const [statsRes, trendRes] = await Promise.all([getDashboard(), getDashboardTrend()])
+    if (statsRes.code === 0 && statsRes.data) stats.value = statsRes.data
+    if (trendRes.code === 0 && trendRes.data) {
+      trendDates.value = trendRes.data.dates
+      trendCounts.value = trendRes.data.counts
+    }
   } catch {}
   finally { loading.value = false }
 })

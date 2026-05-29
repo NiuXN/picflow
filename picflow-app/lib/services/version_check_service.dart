@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../config/api_config.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
@@ -49,6 +51,7 @@ class AppVersionInfo {
 /// 检查 App 版本更新，根据更新类型弹出不同提示
 Future<void> checkAppVersion(BuildContext context, {int? userId}) async {
   try {
+    await _ensureVersionInfo();
     final dio = Dio(BaseOptions(
       baseUrl: ApiConfig.baseUrl,
       connectTimeout: const Duration(seconds: 5),
@@ -169,18 +172,21 @@ Future<void> _showUpdateDialog(BuildContext context, AppVersionInfo info) async 
 }
 
 /// 处理更新操作：根据平台走不同更新通道
-void _handleUpdate(BuildContext context, AppVersionInfo info) {
-  // 打开下载链接（实际项目用 url_launcher）
+Future<void> _handleUpdate(BuildContext context, AppVersionInfo info) async {
   if (info.downloadUrl != null && info.downloadUrl!.isNotEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('下载地址: ${info.downloadUrl}')),
-    );
+    final uri = Uri.parse(info.downloadUrl!);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('无法打开下载链接: ${info.downloadUrl}')),
+        );
+      }
+    }
   }
 
-  // Android: 可接入 Play In-app Updates (play_in_app_update)
-  // iOS: 跳转 App Store
-
-  if (info.updateType != UpdateType.force) {
+  if (info.updateType != UpdateType.force && context.mounted) {
     Navigator.of(context).pop();
   }
 }
@@ -192,8 +198,17 @@ void _applyHotfix(String url) {
   debugPrint('[Hotfix] 热更新补丁地址: $url');
 }
 
-/// 当前版本号（生产环境用 package_info_plus 动态获取）
-String _currentVersionName() => '1.0.0';
+String? _cachedVersionName;
+int? _cachedVersionCode;
 
-/// 当前版本码
-int _currentVersionCode() => 1;
+Future<void> _ensureVersionInfo() async {
+  if (_cachedVersionName == null) {
+    final info = await PackageInfo.fromPlatform();
+    _cachedVersionName = info.version;
+    _cachedVersionCode = int.tryParse(info.buildNumber) ?? 1;
+  }
+}
+
+String _currentVersionName() => _cachedVersionName ?? '1.0.0';
+
+int _currentVersionCode() => _cachedVersionCode ?? 1;

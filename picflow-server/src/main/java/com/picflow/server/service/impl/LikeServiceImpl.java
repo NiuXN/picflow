@@ -79,4 +79,9 @@ public class LikeServiceImpl extends ServiceImpl<LikeMapper, Like> implements Li
                 .map(Like::getArtworkId)
                 .collect(Collectors.toSet());
     }
+
+    @Override
+    public long getTotalLikesByUser(Long userId) {
+        return this.count(new LambdaQueryWrapper<Like>().eq(Like::getUserId, userId));
+    }
 }

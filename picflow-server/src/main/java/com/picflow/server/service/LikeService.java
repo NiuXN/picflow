@@ -15,4 +15,6 @@ public interface LikeService extends IService<Like> {
     void unlike(Long userId, Long artworkId);
 
     Set<Long> getLikedArtworkIds(Long userId, List<Long> artworkIds);
+
+    long getTotalLikesByUser(Long userId);
 }

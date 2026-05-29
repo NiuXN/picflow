@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/artwork_service_provider.dart';
 import '../providers/square_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
@@ -74,6 +75,7 @@ class _SquareScreenState extends ConsumerState<SquareScreen> {
               ),
               TagChipList(
                 selectedTag: state.selectedTag,
+                artworkService: ref.read(artworkServiceProvider),
                 onTagSelected: (tag) {
                   ref.read(squareProvider.notifier).selectTag(tag);
                 },

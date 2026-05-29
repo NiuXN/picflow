@@ -30,9 +30,4 @@ class ImageModel {
     );
   }
 
-  /// 最近作品占位数据（本地持久化前使用）
-  static List<ImageModel> get recentWorks => [
-        const ImageModel(name: '午后咖啡', date: '5月24日'),
-        const ImageModel(name: '城市剪影', date: '5月20日'),
-      ];
 }

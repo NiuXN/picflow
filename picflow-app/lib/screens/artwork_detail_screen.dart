@@ -47,14 +47,14 @@ class _ArtworkDetailScreenState extends ConsumerState<ArtworkDetailScreen> {
       ),
       body: SafeArea(child: detailState.isLoading
           ? const ArtworkDetailSkeleton()
-          : detailState.error != null
+          : detailState.error != null || detailState.artwork == null
               ? Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.image_outlined, size: 64, color: AppColors.onSurfaceVariant.withValues(alpha: 0.5)),
                       const SizedBox(height: 12),
-                      Text(detailState.error!, style: AppTypography.bodyRegular.copyWith(color: AppColors.onSurfaceVariant)),
+                      Text(detailState.error ?? '作品不存在', style: AppTypography.bodyRegular.copyWith(color: AppColors.onSurfaceVariant)),
                       const SizedBox(height: 16),
                       TextButton(
                         onPressed: () => ref.read(artworkDetailProvider(widget.artworkId).notifier).load(),
@@ -210,7 +210,7 @@ class _ArtworkDetailScreenState extends ConsumerState<ArtworkDetailScreen> {
                 radius: 16,
                 backgroundColor: AppColors.inversePrimary,
                 child: Text(
-                  (artwork.author?.nickname ?? '用户').substring(0, 1),
+                  (artwork.author?.nickname?.isNotEmpty == true ? artwork.author!.nickname![0] : (artwork.author?.username?.isNotEmpty == true ? artwork.author!.username![0] : 'U')).toUpperCase(),
                   style: const TextStyle(color: AppColors.surfaceContainerLowest, fontSize: 14),
                 ),
               ),

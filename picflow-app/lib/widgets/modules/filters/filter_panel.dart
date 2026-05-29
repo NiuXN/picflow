@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../models/filter_model.dart';
+import '../../../providers/config_provider.dart';
 import '../../../providers/editor_provider.dart';
 import '../../../theme/app_colors.dart';
 import '../../../theme/app_typography.dart';
@@ -13,15 +14,17 @@ class FilterPanel extends ConsumerWidget {
     final editorState = ref.watch(editorProvider);
     final editorNotifier = ref.read(editorProvider.notifier);
     final currentFilter = editorState.selectedFilter;
+    final filterState = ref.watch(filterConfigProvider);
+    final filters = filterState.filters;
 
     return SizedBox(
       height: 160,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        itemCount: FilterModel.presets.length,
+        itemCount: filters.length,
         separatorBuilder: (_, __) => const SizedBox(width: 12),
         itemBuilder: (context, index) {
-          final filter = FilterModel.presets[index];
+          final filter = filters[index];
           final isSelected = currentFilter == filter.type;
 
           return GestureDetector(

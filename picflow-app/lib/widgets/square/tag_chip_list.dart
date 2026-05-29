@@ -1,21 +1,50 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
+import '../../services/artwork_service.dart';
 
-class TagChipList extends StatelessWidget {
+class TagChipList extends StatefulWidget {
   final String? selectedTag;
   final ValueChanged<String?> onTagSelected;
+  final ArtworkService? artworkService;
 
   const TagChipList({
     super.key,
     required this.selectedTag,
     required this.onTagSelected,
+    this.artworkService,
   });
 
-  static const _tags = ['胶片', '治愈', '简约', '复古', '风景', '人物', '美食', '黑白'];
+  @override
+  State<TagChipList> createState() => _TagChipListState();
+}
+
+class _TagChipListState extends State<TagChipList> {
+  List<String> _tags = [];
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTags();
+  }
+
+  Future<void> _loadTags() async {
+    final service = widget.artworkService ?? ArtworkService();
+    final tags = await service.getTags();
+    if (mounted) {
+      setState(() {
+        _tags = tags;
+        _loading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_loading || _tags.isEmpty) {
+      return const SizedBox(height: 36);
+    }
     return SizedBox(
       height: 36,
       child: ListView.separated(
@@ -25,9 +54,9 @@ class TagChipList extends StatelessWidget {
         separatorBuilder: (_, __) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
           final tag = _tags[index];
-          final isSelected = selectedTag == tag;
+          final isSelected = widget.selectedTag == tag;
           return GestureDetector(
-            onTap: () => onTagSelected(isSelected ? null : tag),
+            onTap: () => widget.onTagSelected(isSelected ? null : tag),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
               decoration: BoxDecoration(

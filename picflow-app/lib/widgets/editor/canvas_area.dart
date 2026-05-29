@@ -7,6 +7,7 @@ import '../../models/frame_model.dart';
 import '../../models/image_model.dart';
 import '../../models/layout_model.dart';
 import '../../models/watermark_model.dart';
+import '../../providers/config_provider.dart';
 import '../../providers/editor_provider.dart';
 import '../../providers/image_provider.dart';
 import '../../theme/app_colors.dart';
@@ -82,7 +83,7 @@ class CanvasArea extends ConsumerWidget {
 
   Widget _buildFramedImage(ImageModel imageState, EditorState editorState) {
     final rawImage = _buildImageWidget(imageState.path!);
-    final filteredImage = _applyFilter(rawImage, editorState);
+    final filteredImage = _applyFilter(rawImage, editorState, ref);
     final image = _applyWatermark(filteredImage, editorState);
 
     switch (editorState.selectedFrame) {
@@ -219,7 +220,6 @@ class CanvasArea extends ConsumerWidget {
 
   Widget _buildProFilmFrame(Widget image, EditorState editorState) {
     final padding = _framePadding(editorState.layout.aspectRatio);
-    debugPrint('[_buildProFilmFrame] ====== 专业底片帧调试 ======');
 
     return Padding(
       padding: padding,
@@ -340,9 +340,13 @@ class CanvasArea extends ConsumerWidget {
   }
 
   /// 应用滤镜
-  Widget _applyFilter(Widget child, EditorState editorState) {
+  Widget _applyFilter(Widget child, EditorState editorState, WidgetRef ref) {
     if (editorState.selectedFilter == FilterType.none) return child;
-    final filter = FilterModel.findByType(editorState.selectedFilter);
+    final filters = ref.watch(filterConfigProvider).filters;
+    final filter = filters.firstWhere(
+      (f) => f.type == editorState.selectedFilter,
+      orElse: () => FilterModel.findByType(editorState.selectedFilter),
+    );
     return ColorFiltered(
       colorFilter: filter.colorFilter,
       child: child,

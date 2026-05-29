@@ -8,11 +8,13 @@ import com.picflow.server.common.BusinessException;
 import com.picflow.server.common.PageResult;
 import com.picflow.server.entity.Artwork;
 import com.picflow.server.entity.ArtworkTag;
+import com.picflow.server.entity.User;
 import com.picflow.server.mapper.ArtworkMapper;
 import com.picflow.server.mapper.ArtworkTagMapper;
 import com.picflow.server.service.ArtworkService;
 import com.picflow.server.service.FavoriteService;
 import com.picflow.server.service.LikeService;
+import com.picflow.server.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.CacheManager;
@@ -22,6 +24,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -34,6 +37,7 @@ public class ArtworkServiceImpl extends ServiceImpl<ArtworkMapper, Artwork> impl
     private final ArtworkTagMapper artworkTagMapper;
     private final LikeService likeService;
     private final FavoriteService favoriteService;
+    private final UserService userService;
     private final CacheManager cacheManager;
 
     @Override
@@ -78,7 +82,11 @@ public class ArtworkServiceImpl extends ServiceImpl<ArtworkMapper, Artwork> impl
     }
 
     private void enrichWithUserInteraction(Long userId, List<Artwork> artworks) {
-        if (userId == null || artworks.isEmpty()) {
+        if (artworks.isEmpty()) {
+            return;
+        }
+        populateAuthorInfo(artworks);
+        if (userId == null) {
             return;
         }
         List<Long> artworkIds = artworks.stream().map(Artwork::getId).collect(Collectors.toList());
@@ -90,10 +98,33 @@ public class ArtworkServiceImpl extends ServiceImpl<ArtworkMapper, Artwork> impl
         }
     }
 
+    private void populateAuthorInfo(List<Artwork> artworks) {
+        Set<Long> userIds = artworks.stream()
+                .map(Artwork::getUserId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        if (userIds.isEmpty()) return;
+
+        Map<Long, User> userMap = userService.listByIds(userIds).stream()
+                .collect(Collectors.toMap(User::getId, u -> u));
+
+        for (Artwork artwork : artworks) {
+            User author = userMap.get(artwork.getUserId());
+            if (author != null) {
+                User safe = new User();
+                safe.setId(author.getId());
+                safe.setUsername(author.getUsername());
+                safe.setNickname(author.getNickname());
+                safe.setAvatarUrl(author.getAvatarUrl());
+                artwork.setAuthor(safe);
+            }
+        }
+    }
+
     @Override
     @CacheEvict(value = {"artworks:list", "artwork:trending"}, allEntries = true)
     public Artwork publishArtwork(Long userId, String title, String description,
-                                  String imageUrl, String tags, String frameType,
+                                  String imageUrl, String thumbnailUrl, String tags, String frameType,
                                   String aspectRatio, String bgColor, String watermarkText,
                                   String filter) {
         log.info("[缓存清除] 发布新作品 - userId={}, title={}", userId, title);
@@ -102,7 +133,7 @@ public class ArtworkServiceImpl extends ServiceImpl<ArtworkMapper, Artwork> impl
         artwork.setTitle(title);
         artwork.setDescription(description);
         artwork.setImageUrl(imageUrl);
-        artwork.setThumbnailUrl(imageUrl);
+        artwork.setThumbnailUrl(thumbnailUrl != null && !thumbnailUrl.isEmpty() ? thumbnailUrl : imageUrl);
         artwork.setTags(tags);
         artwork.setFrameType(frameType);
         artwork.setAspectRatio(aspectRatio);
@@ -142,7 +173,7 @@ public class ArtworkServiceImpl extends ServiceImpl<ArtworkMapper, Artwork> impl
             return null;
         }
         log.debug("[作品详情] id={}, title={}, status={}", id, artwork.getTitle(), artwork.getStatus());
-        if (artwork != null && "published".equals(artwork.getStatus())) {
+        if ("published".equals(artwork.getStatus())) {
             incrementViewCount(id);
         }
         return artwork;
@@ -211,5 +242,15 @@ public class ArtworkServiceImpl extends ServiceImpl<ArtworkMapper, Artwork> impl
                 log.info("[浏览量里程碑] artworkId={} 浏览量达到 {}", id, artwork.getViewsCount());
             }
         }
+    }
+
+    @Override
+    public List<String> getAllTags() {
+        return artworkTagMapper.selectList(null).stream()
+                .map(ArtworkTag::getTag)
+                .filter(Objects::nonNull)
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
     }
 }

@@ -109,10 +109,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               '最近作品',
               style: AppTypography.heading.copyWith(fontSize: 18),
             ),
-            Text(
-              '查看全部',
-              style: AppTypography.labelMedium.copyWith(
-                color: AppColors.inversePrimary,
+            GestureDetector(
+              onTap: () => context.push('/profile'),
+              child: Text(
+                '查看全部',
+                style: AppTypography.labelMedium.copyWith(
+                  color: AppColors.inversePrimary,
+                ),
               ),
             ),
           ],
@@ -196,9 +199,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   Widget _buildQuickActions() {
     final actions = [
-      _QuickAction(icon: Icons.grid_on_outlined, label: '拼图'),
-      _QuickAction(icon: Icons.edit_outlined, label: '修图'),
-      _QuickAction(icon: Icons.monitor_outlined, label: '视频'),
+      _QuickAction(icon: Icons.grid_on_outlined, label: '拼图', onTap: () => _showComingSoon('拼图')),
+      _QuickAction(icon: Icons.edit_outlined, label: '修图', onTap: _navigateToEditor),
+      _QuickAction(icon: Icons.monitor_outlined, label: '视频', onTap: () => _showComingSoon('视频')),
     ];
 
     return Column(
@@ -215,7 +218,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4),
                 child: _TapScale(
-                  onTap: _navigateToEditor,
+                  onTap: action.onTap,
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
                     decoration: BoxDecoration(
@@ -248,6 +251,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           }).toList(),
         ),
       ],
+    );
+  }
+
+  void _showComingSoon(String feature) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('$feature 功能即将上线', style: AppTypography.labelSmall),
+        duration: const Duration(seconds: 2),
+      ),
     );
   }
 
@@ -300,6 +312,7 @@ class _TapScaleState extends State<_TapScale> {
 class _QuickAction {
   final IconData icon;
   final String label;
+  final VoidCallback onTap;
 
-  _QuickAction({required this.icon, required this.label});
+  _QuickAction({required this.icon, required this.label, required this.onTap});
 }

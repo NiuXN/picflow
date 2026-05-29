@@ -46,4 +46,7 @@ public class Artwork {
 
     @TableField(exist = false)
     private Boolean isFavorited;        // 当前用户是否已收藏（非数据库字段）
+
+    @TableField(exist = false)
+    private User author;                // 作者信息（非数据库字段）
 }

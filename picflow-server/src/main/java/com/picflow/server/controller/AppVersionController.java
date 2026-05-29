@@ -52,7 +52,7 @@ public class AppVersionController {
         }
 
         Map<String, Object> result = new HashMap<>();
-        result.put("latest", updateType != "none");
+        result.put("latest", !"none".equals(updateType));
         result.put("updateType", updateType);
         result.put("versionName", version.getVersionName());
         result.put("versionCode", version.getVersionCode());

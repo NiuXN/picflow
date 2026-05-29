@@ -6,11 +6,18 @@ import com.picflow.server.common.BusinessException;
 import com.picflow.server.entity.User;
 import com.picflow.server.mapper.UserMapper;
 import com.picflow.server.security.JwtTokenProvider;
+import com.picflow.server.entity.Artwork;
+import com.picflow.server.service.ArtworkService;
+import com.picflow.server.service.FavoriteService;
+import com.picflow.server.service.LikeService;
 import com.picflow.server.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -18,6 +25,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final ArtworkService artworkService;
+    private final LikeService likeService;
+    private final FavoriteService favoriteService;
 
     @Override
     public User register(String username, String password, String nickname) {
@@ -73,5 +83,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public User getCurrentUser() {
         Long userId = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         return this.getById(userId);
+    }
+
+    @Override
+    public Map<String, Object> getUserStats(Long userId) {
+        long artworksCount = artworkService.count(
+                new LambdaQueryWrapper<Artwork>().eq(Artwork::getUserId, userId));
+        long likesCount = likeService.getTotalLikesByUser(userId);
+        long favoritesCount = favoriteService.getTotalFavoritesByUser(userId);
+
+        Map<String, Object> stats = new LinkedHashMap<>();
+        stats.put("artworksCount", artworksCount);
+        stats.put("likesCount", likesCount);
+        stats.put("favoritesCount", favoritesCount);
+        stats.put("followingCount", 0);
+        return stats;
     }
 }

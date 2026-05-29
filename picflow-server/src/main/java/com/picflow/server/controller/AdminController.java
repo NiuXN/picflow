@@ -4,13 +4,16 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.picflow.server.common.PageResult;
 import com.picflow.server.common.Result;
+import com.picflow.server.entity.AppConfig;
 import com.picflow.server.entity.AppVersion;
 import com.picflow.server.entity.Artwork;
 import com.picflow.server.entity.Notification;
 import com.picflow.server.entity.User;
+import com.picflow.server.service.AppConfigService;
 import com.picflow.server.service.AppVersionService;
 import com.picflow.server.service.ArtworkService;
 import com.picflow.server.service.NotificationService;
+import com.picflow.server.service.TagService;
 import com.picflow.server.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -20,6 +23,10 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -33,6 +40,8 @@ public class AdminController {
     private final ArtworkService artworkService;
     private final UserService userService;
     private final NotificationService notificationService;
+    private final TagService tagService;
+    private final AppConfigService appConfigService;
     private final StringRedisTemplate stringRedisTemplate;
 
     @GetMapping("/dashboard")
@@ -50,6 +59,31 @@ public class AdminController {
                 "totalUsers", totalUsers,
                 "todayNew", todayNew
         ));
+    }
+
+    @GetMapping("/dashboard/trend")
+    @Operation(summary = "近7日数据趋势")
+    public Result<Map<String, Object>> dashboardTrend() {
+        List<String> dates = new ArrayList<>();
+        List<Long> counts = new ArrayList<>();
+
+        for (int i = 6; i >= 0; i--) {
+            LocalDate date = LocalDate.now().minusDays(i);
+            LocalDateTime start = date.atStartOfDay();
+            LocalDateTime end = date.plusDays(1).atStartOfDay();
+
+            LambdaQueryWrapper<Artwork> wrapper = new LambdaQueryWrapper<>();
+            wrapper.ge(Artwork::getCreatedAt, start).lt(Artwork::getCreatedAt, end);
+            long count = artworkService.count(wrapper);
+
+            dates.add(date.getMonthValue() + "/" + date.getDayOfMonth());
+            counts.add(count);
+        }
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("dates", dates);
+        result.put("counts", counts);
+        return Result.ok(result);
     }
 
     @GetMapping("/artworks")
@@ -172,5 +206,83 @@ public class AdminController {
         }
 
         return Result.ok(user);
+    }
+
+    @GetMapping("/tags")
+    @Operation(summary = "标签管理列表")
+    public Result<List<com.picflow.server.entity.Tag>> tagList() {
+        return Result.ok(tagService.getAllTagsAdmin());
+    }
+
+    @PostMapping("/tags")
+    @Operation(summary = "创建标签")
+    public Result<com.picflow.server.entity.Tag> createTag(@RequestBody Map<String, Object> body) {
+        String name = (String) body.get("name");
+        String description = (String) body.get("description");
+        Integer sortOrder = body.get("sortOrder") != null ? ((Number) body.get("sortOrder")).intValue() : 0;
+        com.picflow.server.entity.Tag tag = tagService.createTag(name, description, sortOrder);
+        return Result.ok(tag);
+    }
+
+    @PutMapping("/tags/{id}")
+    @Operation(summary = "更新标签")
+    public Result<com.picflow.server.entity.Tag> updateTag(@PathVariable Long id, @RequestBody Map<String, Object> body) {
+        String name = (String) body.get("name");
+        String description = (String) body.get("description");
+        Integer sortOrder = body.get("sortOrder") != null ? ((Number) body.get("sortOrder")).intValue() : null;
+        Boolean enabled = (Boolean) body.get("enabled");
+        com.picflow.server.entity.Tag tag = tagService.updateTag(id, name, description, sortOrder, enabled);
+        if (tag == null) return Result.error("标签不存在");
+        return Result.ok(tag);
+    }
+
+    @DeleteMapping("/tags/{id}")
+    @Operation(summary = "删除标签")
+    public Result<Map<String, String>> deleteTag(@PathVariable Long id) {
+        tagService.deleteTag(id);
+        return Result.ok(Map.of("message", "已删除"));
+    }
+
+    @GetMapping("/configs")
+    @Operation(summary = "配置管理列表")
+    public Result<List<AppConfig>> configList(@RequestParam(required = false) String configType) {
+        if (configType != null && !configType.isEmpty()) {
+            return Result.ok(appConfigService.getConfigsByType(configType));
+        }
+        return Result.ok(appConfigService.getAllConfigsAdmin());
+    }
+
+    @PostMapping("/configs")
+    @Operation(summary = "创建配置")
+    public Result<AppConfig> createConfig(@RequestBody Map<String, Object> body) {
+        String configType = (String) body.get("configType");
+        String configKey = (String) body.get("configKey");
+        String configValue = (String) body.get("configValue");
+        String label = (String) body.get("label");
+        String description = (String) body.get("description");
+        Integer sortOrder = body.get("sortOrder") != null ? ((Number) body.get("sortOrder")).intValue() : 0;
+        AppConfig config = appConfigService.createConfig(configType, configKey, configValue, label, description, sortOrder);
+        return Result.ok(config);
+    }
+
+    @PutMapping("/configs/{id}")
+    @Operation(summary = "更新配置")
+    public Result<AppConfig> updateConfig(@PathVariable Long id, @RequestBody Map<String, Object> body) {
+        String configKey = (String) body.get("configKey");
+        String configValue = (String) body.get("configValue");
+        String label = (String) body.get("label");
+        String description = (String) body.get("description");
+        Integer sortOrder = body.get("sortOrder") != null ? ((Number) body.get("sortOrder")).intValue() : null;
+        Boolean enabled = (Boolean) body.get("enabled");
+        AppConfig config = appConfigService.updateConfig(id, configKey, configValue, label, description, sortOrder, enabled);
+        if (config == null) return Result.error("配置不存在");
+        return Result.ok(config);
+    }
+
+    @DeleteMapping("/configs/{id}")
+    @Operation(summary = "删除配置")
+    public Result<Map<String, String>> deleteConfig(@PathVariable Long id) {
+        appConfigService.deleteConfig(id);
+        return Result.ok(Map.of("message", "已删除"));
     }
 }

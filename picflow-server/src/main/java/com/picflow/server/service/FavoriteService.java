@@ -15,4 +15,6 @@ public interface FavoriteService extends IService<Favorite> {
     void unfavorite(Long userId, Long artworkId);
 
     Set<Long> getFavoritedArtworkIds(Long userId, List<Long> artworkIds);
+
+    long getTotalFavoritesByUser(Long userId);
 }

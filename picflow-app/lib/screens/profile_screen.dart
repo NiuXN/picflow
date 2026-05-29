@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../providers/auth_provider.dart';
+import '../providers/profile_provider.dart';
 import '../providers/user_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
@@ -13,7 +15,9 @@ class ProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(myArtworksProvider);
+    final artworksState = ref.watch(myArtworksProvider);
+    final profileState = ref.watch(profileProvider);
+    final user = profileState.user;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -36,7 +40,7 @@ class ProfileScreen extends ConsumerWidget {
                     ),
                     IconButton(
                       icon: const Icon(Icons.settings_outlined, color: AppColors.onSurface),
-                      onPressed: () => _showSettings(context),
+                      onPressed: () => _showSettings(context, ref),
                     ),
                   ],
                 ),
@@ -46,17 +50,27 @@ class ProfileScreen extends ConsumerWidget {
                     CircleAvatar(
                       radius: 32,
                       backgroundColor: AppColors.inversePrimary,
-                      child: const Text(
-                        'U',
-                        style: TextStyle(color: AppColors.surfaceContainerLowest, fontSize: 24, fontWeight: FontWeight.w600),
-                      ),
+                      backgroundImage: user?.avatarUrl != null
+                          ? NetworkImage(user!.avatarUrl!)
+                          : null,
+                      child: user?.avatarUrl == null
+                          ? Text(
+                              (user?.nickname?.isNotEmpty == true
+                                      ? user!.nickname![0]
+                                      : (user?.username?.isNotEmpty == true
+                                          ? user!.username![0]
+                                          : 'U'))
+                                  .toUpperCase(),
+                              style: const TextStyle(color: AppColors.surfaceContainerLowest, fontSize: 24, fontWeight: FontWeight.w600),
+                            )
+                          : null,
                     ),
                     const SizedBox(width: 16),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'PicFlow 用户',
+                          user?.nickname ?? user?.username ?? 'PicFlow 用户',
                           style: AppTypography.labelLarge.copyWith(
                             color: AppColors.onSurface,
                             fontWeight: FontWeight.w600,
@@ -64,14 +78,14 @@ class ProfileScreen extends ConsumerWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          '@picflow_user',
+                          '@${user?.username ?? 'picflow_user'}',
                           style: AppTypography.labelSmall.copyWith(color: AppColors.onSurfaceVariant),
                         ),
                       ],
                     ),
                     const Spacer(),
                     GestureDetector(
-                      onTap: () {},
+                      onTap: () => _showEditProfile(context, ref),
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         decoration: BoxDecoration(
@@ -94,7 +108,7 @@ class ProfileScreen extends ConsumerWidget {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildStatsBar(),
+          _buildStatsBar(artworksState, profileState),
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
             child: Text(
@@ -106,9 +120,9 @@ class ProfileScreen extends ConsumerWidget {
             ),
           ),
           Expanded(
-            child: state.isLoading
+            child: artworksState.isLoading
                 ? const Center(child: CircularProgressIndicator(color: AppColors.inversePrimary))
-                : state.artworks.isEmpty
+                : artworksState.artworks.isEmpty
                     ? Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -122,14 +136,15 @@ class ProfileScreen extends ConsumerWidget {
                           ],
                         ),
                       )
-                    : ProfileArtworkGrid(artworks: state.artworks),
+                    : ProfileArtworkGrid(artworks: artworksState.artworks),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildStatsBar() {
+  Widget _buildStatsBar(MyArtworksState artworksState, ProfileState profileState) {
+    final stats = profileState.stats;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -140,10 +155,10 @@ class ProfileScreen extends ConsumerWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _statItem('作品', '0'),
-          _statItem('获赞', '0'),
-          _statItem('收藏', '0'),
-          _statItem('关注', '0'),
+          _statItem('作品', '${stats?.artworksCount ?? artworksState.artworks.length}'),
+          _statItem('获赞', '${stats?.likesCount ?? 0}'),
+          _statItem('收藏', '${stats?.favoritesCount ?? 0}'),
+          _statItem('关注', '${stats?.followingCount ?? 0}'),
         ],
       ),
     );
@@ -168,7 +183,100 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-  void _showSettings(BuildContext context) {
+  void _showEditProfile(BuildContext context, WidgetRef ref) {
+    final profileState = ref.read(profileProvider);
+    final nicknameController = TextEditingController(text: profileState.user?.nickname ?? '');
+    final bioController = TextEditingController(text: profileState.user?.bio ?? '');
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(24, 12, 24, MediaQuery.of(ctx).viewInsets.bottom + 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 40, height: 4,
+                  decoration: BoxDecoration(
+                    color: AppColors.outlineVariant,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text('编辑资料', style: AppTypography.h2.copyWith(color: AppColors.onSurface)),
+                const SizedBox(height: 24),
+                TextField(
+                  controller: nicknameController,
+                  decoration: InputDecoration(
+                    hintText: '昵称',
+                    filled: true,
+                    fillColor: AppColors.background,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  ),
+                  style: AppTypography.bodyRegular,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: bioController,
+                  decoration: InputDecoration(
+                    hintText: '个人简介',
+                    filled: true,
+                    fillColor: AppColors.background,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  ),
+                  style: AppTypography.bodyRegular,
+                  maxLines: 3,
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      final success = await ref.read(profileProvider.notifier).updateProfile(
+                            nickname: nicknameController.text.trim(),
+                            bio: bioController.text.trim(),
+                          );
+                      if (ctx.mounted) {
+                        Navigator.of(ctx).pop();
+                        if (success) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('资料已更新', style: AppTypography.labelSmall)),
+                          );
+                        }
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.inversePrimary,
+                      foregroundColor: AppColors.surfaceContainerLowest,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    child: Text('保存', style: AppTypography.labelLarge),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showSettings(BuildContext context, WidgetRef ref) {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -191,7 +299,11 @@ class ProfileScreen extends ConsumerWidget {
                 const SizedBox(height: 20),
                 Text('设置', style: AppTypography.h2.copyWith(color: AppColors.onSurface)),
                 const SizedBox(height: 24),
-                _settingItem(ctx, Icons.person_outline_rounded, '编辑资料', '修改昵称、头像'),
+                _settingItem(ctx, Icons.person_outline_rounded, '编辑资料', '修改昵称、头像',
+                    onTap: () {
+                      Navigator.of(ctx).pop();
+                      _showEditProfile(context, ref);
+                    }),
                 const SizedBox(height: 12),
                 _settingItem(ctx, Icons.notifications_outlined, '通知设置', '管理推送通知',
                     onTap: () {
@@ -199,9 +311,17 @@ class ProfileScreen extends ConsumerWidget {
                       context.push('/notifications');
                     }),
                 const SizedBox(height: 12),
-                _settingItem(ctx, Icons.brush_outlined, '设计偏好', '默认字体、水印设置'),
+                _settingItem(ctx, Icons.brush_outlined, '设计偏好', '默认字体、水印设置',
+                    onTap: () {
+                      Navigator.of(ctx).pop();
+                    }),
                 const SizedBox(height: 12),
-                _settingItem(ctx, Icons.info_outline, '关于', '版本 1.0.0'),
+                _settingItem(ctx, Icons.logout, '退出登录', '退出当前账号',
+                    onTap: () {
+                      Navigator.of(ctx).pop();
+                      ref.read(authProvider.notifier).logout();
+                      context.go('/auth');
+                    }),
               ],
             ),
           ),

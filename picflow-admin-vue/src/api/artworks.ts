@@ -2,9 +2,9 @@ import { get, put, del } from './index'
 import type { ApiResponse, Artwork } from '@/types'
 
 /** 获取作品列表：GET /admin/artworks */
-export async function getArtworks() {
-  const res = await get<{ items: Artwork[] }>('/admin/artworks')
-  return { ...res, data: res.data?.items ?? [] }
+export async function getArtworks(page = 1, size = 20) {
+  const res = await get<{ total: number; items: Artwork[] }>('/admin/artworks', { page, size })
+  return { ...res, data: res.data?.items ?? [], total: res.data?.total ?? 0 }
 }
 
 /** 审核作品：PUT /admin/artworks/{id}/review */

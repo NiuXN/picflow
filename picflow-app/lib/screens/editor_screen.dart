@@ -211,7 +211,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
     if (editorState.layout.backgroundColorIndex >= 0 &&
         editorState.layout.backgroundColorIndex < ColorUtils.backgroundColors.length) {
       final color = ColorUtils.backgroundColors[editorState.layout.backgroundColorIndex];
-      hexColor = '#${color.toARGB32().toRadixString(16).substring(2).toUpperCase()}';
+      hexColor = '#${color.toARGB32().toRadixString(16).padLeft(8, '0').substring(2).toUpperCase()}';
     }
 
     context.push('/publish', extra: {
