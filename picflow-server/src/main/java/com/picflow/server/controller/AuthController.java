@@ -18,9 +18,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.data.redis.core.StringRedisTemplate;
+
 import java.util.Map;
 import java.util.Random;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @RestController
@@ -31,16 +33,11 @@ public class AuthController {
 
     private final UserService userService;
     private final JwtTokenProvider jwtTokenProvider;
+    private final StringRedisTemplate stringRedisTemplate;
 
+    private static final String SMS_PREFIX = "sms:code:";
     private static final long CODE_EXPIRE_SECONDS = 300;
-    private final Map<String, CodeEntry> codeStore = new ConcurrentHashMap<>();
     private final Random random = new Random();
-
-    private record CodeEntry(String code, long expireAt) {
-        boolean isExpired() {
-            return System.currentTimeMillis() > expireAt;
-        }
-    }
 
     @PostMapping("/send-code")
     @Operation(summary = "发送短信验证码")
@@ -50,8 +47,7 @@ public class AuthController {
             return Result.error("请输入正确的手机号");
         }
         String code = String.format("%06d", random.nextInt(1000000));
-        long expireAt = System.currentTimeMillis() + CODE_EXPIRE_SECONDS * 1000;
-        codeStore.put(phone, new CodeEntry(code, expireAt));
+        stringRedisTemplate.opsForValue().set(SMS_PREFIX + phone, code, CODE_EXPIRE_SECONDS, TimeUnit.SECONDS);
         log.info("[SMS] 验证码发送到 {}: {} (有效期{}秒)", phone, code, CODE_EXPIRE_SECONDS);
         return Result.ok(Map.of("message", "验证码已发送"));
     }
@@ -66,15 +62,12 @@ public class AuthController {
         if (phone == null || code == null) {
             return Result.error("手机号和验证码不能为空");
         }
-        CodeEntry entry = codeStore.get(phone);
-        if (entry == null || !entry.code().equals(code)) {
+        String key = SMS_PREFIX + phone;
+        String stored = stringRedisTemplate.opsForValue().get(key);
+        if (stored == null || !stored.equals(code)) {
             return Result.error("验证码错误或已过期");
         }
-        if (entry.isExpired()) {
-            codeStore.remove(phone);
-            return Result.error("验证码已过期，请重新获取");
-        }
-        codeStore.remove(phone);
+        stringRedisTemplate.delete(key);
 
         User user = userService.loginByPhone(phone);
         if (user != null && "banned".equals(user.getStatus())) {

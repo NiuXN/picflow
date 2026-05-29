@@ -1,1 +1,11 @@
 picflow-admin-vue/dist/
+picflow-admin-vue/node_modules/
+picflow-server/target/
+picflow-server/application-dev.yml
+**/application-dev.yml
+.idea/
+*.iml
+.DS_Store
+*.log
+.env
+uploads/

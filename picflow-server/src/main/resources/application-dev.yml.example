@@ -3,12 +3,11 @@ spring:
     url: jdbc:mysql://localhost:3306/picflow?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: root
-    password: Nz_211002
+    password: your-db-password
   data:
     redis:
-      host: 47.84.130.47
+      host: localhost
       port: 6379
-      password: Nz_zhangyue!
 
 mybatis-plus:
   configuration:
@@ -22,18 +21,13 @@ mybatis-plus:
       logic-not-delete-value: 0
 
 jwt:
-  secret: 9Zk7sG2pR5aX8dFbQ1wE4rT7yU0iO3pS5dG8hJ2kL6zX9cV2bN5mQ8sD2fG5hJ7k
+  secret: your-jwt-secret-at-least-32-chars
   expiration: 604800000
 
 picflow:
   upload:
     path: ./uploads
     max-size: 10MB
-
-knife4j:
-  enable: true
-  setting:
-    language: zh_cn
 
 logging:
   level:

@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -56,7 +57,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         user.setUsername("phone_" + phone);
         user.setRole("user");
         user.setStatus("active");
-        user.setPasswordHash(passwordEncoder.encode(phone));
+        user.setPasswordHash(passwordEncoder.encode(UUID.randomUUID().toString()));
         this.save(user);
         return user;
     }
