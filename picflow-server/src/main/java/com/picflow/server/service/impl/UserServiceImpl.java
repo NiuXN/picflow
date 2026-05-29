@@ -9,6 +9,7 @@ import com.picflow.server.security.JwtTokenProvider;
 import com.picflow.server.entity.Artwork;
 import com.picflow.server.service.ArtworkService;
 import com.picflow.server.service.FavoriteService;
+import com.picflow.server.service.FollowService;
 import com.picflow.server.service.LikeService;
 import com.picflow.server.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private final ArtworkService artworkService;
     private final LikeService likeService;
     private final FavoriteService favoriteService;
+    private final FollowService followService;
 
     @Override
     public User register(String username, String password, String nickname) {
@@ -96,7 +98,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         stats.put("artworksCount", artworksCount);
         stats.put("likesCount", likesCount);
         stats.put("favoritesCount", favoritesCount);
-        stats.put("followingCount", 0);
+        stats.put("followingCount", followService.countFollowing(userId));
         return stats;
     }
 }

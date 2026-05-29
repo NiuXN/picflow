@@ -3,12 +3,19 @@ import 'package:dio/dio.dart';
 import 'api_service.dart';
 
 /// 文件上传服务：上传图片到后端，返回 CDN URL
+class UploadResult {
+  final String url;
+  final String? thumbnailUrl;
+
+  const UploadResult({required this.url, this.thumbnailUrl});
+}
+
 class UploadService {
   final ApiService _api;
 
   UploadService({ApiService? api}) : _api = api ?? ApiService();
 
-  Future<String?> uploadImage(File imageFile) async {
+  Future<UploadResult?> uploadImage(File imageFile) async {
     try {
       final formData = FormData.fromMap({
         'file': await MultipartFile.fromFile(
@@ -17,13 +24,19 @@ class UploadService {
         ),
       });
 
-      final response = await _api.upload<String>(
+      final response = await _api.upload<Map<String, dynamic>>(
         path: '/upload/image',
         formData: formData,
-        fromJson: (data) => data['url'] as String,
+        fromJson: (data) => data,
       );
 
-      return response.data;
+      if (response.data != null) {
+        return UploadResult(
+          url: response.data!['url'] as String,
+          thumbnailUrl: response.data!['thumbnailUrl'] as String?,
+        );
+      }
+      return null;
     } catch (e) {
       return null;
     }

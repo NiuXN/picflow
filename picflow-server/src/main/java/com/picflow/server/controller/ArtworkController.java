@@ -170,13 +170,7 @@ public class ArtworkController {
     public Result<PageResult<Comment>> comments(@PathVariable Long id,
                                                  @RequestParam(defaultValue = "1") int page,
                                                  @RequestParam(defaultValue = "20") int size) {
-        Page<Comment> pageResult = commentService.page(
-                new Page<>(page, size),
-                new LambdaQueryWrapper<Comment>()
-                        .eq(Comment::getArtworkId, id)
-                        .isNull(Comment::getParentId)
-                        .orderByDesc(Comment::getCreatedAt));
-        return Result.ok(PageResult.of(pageResult.getTotal(), page, size, pageResult.getRecords()));
+        return Result.ok(commentService.getCommentsWithAuthor(id, page, size));
     }
 
     @PostMapping("/{id}/comments")

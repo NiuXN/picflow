@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/artwork_service_provider.dart';
+import '../services/upload_service.dart';
 import '../utils/snackbar_utils.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
@@ -418,14 +419,13 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
     setState(() => _isPublishing = true);
 
     try {
-      String? imageUrl;
-
+      UploadResult? uploadResult;
       if (widget.imagePath != null) {
         final uploadService = ref.read(uploadServiceProvider);
-        imageUrl = await uploadService.uploadImage(File(widget.imagePath!));
+        uploadResult = await uploadService.uploadImage(File(widget.imagePath!));
       }
 
-      if (imageUrl == null) {
+      if (widget.imagePath != null && uploadResult == null) {
         if (mounted) {
           AppSnackbar.error(context, '图片上传失败，请重试');
         }
@@ -439,7 +439,9 @@ class _PublishScreenState extends ConsumerState<PublishScreen> {
         'description': _descriptionController.text.trim().isNotEmpty
             ? _descriptionController.text.trim()
             : null,
-        'image_url': imageUrl,
+        'image_url': uploadResult?.url ?? widget.imagePath,
+        'thumbnail_url': uploadResult?.thumbnailUrl,
+        'tags': _selectedTags,
         'tags': _selectedTags,
         'frame_type': widget.frameType,
         'aspect_ratio': widget.aspectRatio,

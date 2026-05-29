@@ -10,6 +10,7 @@ import '../screens/publish_screen.dart';
 import '../screens/profile_screen.dart';
 import '../screens/auth_screen.dart';
 import '../screens/notifications_screen.dart';
+import '../screens/design_preferences_screen.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 
@@ -37,6 +38,14 @@ final appRouter = GoRouter(
       pageBuilder: (context, state) => MaterialPage(
         key: state.pageKey,
         child: const AuthScreen(),
+      ),
+    ),
+    GoRoute(
+      path: '/design-preferences',
+      parentNavigatorKey: _rootNavigatorKey,
+      pageBuilder: (context, state) => MaterialPage(
+        key: state.pageKey,
+        child: const DesignPreferencesScreen(),
       ),
     ),
     ShellRoute(

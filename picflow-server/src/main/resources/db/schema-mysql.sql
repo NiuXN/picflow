@@ -88,6 +88,19 @@ CREATE TABLE IF NOT EXISTS favorites (
     FOREIGN KEY (artwork_id) REFERENCES artworks(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='收藏记录表';
 
+-- ========== 关注/粉丝表 ==========
+CREATE TABLE IF NOT EXISTS follows (
+    id           BIGINT PRIMARY KEY COMMENT '关注记录ID（雪花算法）',
+    follower_id  BIGINT NOT NULL COMMENT '关注者用户ID',
+    following_id BIGINT NOT NULL COMMENT '被关注用户ID',
+    created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '关注时间',
+    UNIQUE KEY uk_follows (follower_id, following_id) COMMENT '同一用户不能重复关注',
+    INDEX idx_follows_follower (follower_id) COMMENT '关注者索引',
+    INDEX idx_follows_following (following_id) COMMENT '被关注者索引',
+    FOREIGN KEY (follower_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (following_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='关注/粉丝表';
+
 -- ========== 评论表 ==========
 CREATE TABLE IF NOT EXISTS comments (
     id          BIGINT PRIMARY KEY COMMENT '评论ID（雪花算法）',

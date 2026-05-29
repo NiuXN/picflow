@@ -243,14 +243,4 @@ public class ArtworkServiceImpl extends ServiceImpl<ArtworkMapper, Artwork> impl
             }
         }
     }
-
-    @Override
-    public List<String> getAllTags() {
-        return artworkTagMapper.selectList(null).stream()
-                .map(ArtworkTag::getTag)
-                .filter(Objects::nonNull)
-                .distinct()
-                .sorted()
-                .collect(Collectors.toList());
-    }
 }

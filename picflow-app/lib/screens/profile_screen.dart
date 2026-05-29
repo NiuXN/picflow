@@ -314,6 +314,7 @@ class ProfileScreen extends ConsumerWidget {
                 _settingItem(ctx, Icons.brush_outlined, '设计偏好', '默认字体、水印设置',
                     onTap: () {
                       Navigator.of(ctx).pop();
+                      context.push('/design-preferences');
                     }),
                 const SizedBox(height: 12),
                 _settingItem(ctx, Icons.logout, '退出登录', '退出当前账号',

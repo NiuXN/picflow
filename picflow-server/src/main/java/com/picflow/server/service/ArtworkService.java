@@ -24,6 +24,4 @@ public interface ArtworkService extends IService<Artwork> {
     Artwork updateArtwork(Long userId, Long id, String title, String description,
                           String tags, String frameType, String aspectRatio,
                           String bgColor, String watermarkText, String filter);
-
-    List<String> getAllTags();
 }

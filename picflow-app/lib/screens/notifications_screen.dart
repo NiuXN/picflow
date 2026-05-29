@@ -17,13 +17,17 @@ class NotificationsScreen extends StatefulWidget {
 class _NotificationsScreenState extends State<NotificationsScreen> {
   final _service = NotificationService();
   final _sse = SseService();
+  final _scrollController = ScrollController();
   List<NotificationModel> _notifications = [];
   bool _isLoading = true;
+  bool _hasMore = true;
+  int _page = 1;
 
   @override
   void initState() {
     super.initState();
     _load();
+    _scrollController.addListener(_onScroll);
     _sse.onNotification = (json) {
       final newNotify = NotificationModel.fromJson(json);
       if (mounted) setState(() => _notifications.insert(0, newNotify));
@@ -33,14 +37,38 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   @override
   void dispose() {
+    _scrollController.dispose();
     _sse.disconnect();
     super.dispose();
   }
 
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      if (!_isLoading && _hasMore) _loadMore();
+    }
+  }
+
   Future<void> _load() async {
     setState(() => _isLoading = true);
-    final items = await _service.getNotifications();
-    if (mounted) setState(() { _notifications = items; _isLoading = false; });
+    final items = await _service.getNotifications(page: 1);
+    if (mounted) setState(() {
+      _notifications = items;
+      _hasMore = items.length >= 20;
+      _page = 1;
+      _isLoading = false;
+    });
+  }
+
+  Future<void> _loadMore() async {
+    setState(() => _isLoading = true);
+    final items = await _service.getNotifications(page: _page + 1);
+    if (mounted) setState(() {
+      _notifications.addAll(items);
+      _hasMore = items.length >= 20;
+      _page++;
+      _isLoading = false;
+    });
   }
 
   @override
@@ -71,6 +99,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   ),
                 )
               : ListView.separated(
+                  controller: _scrollController,
                   padding: const EdgeInsets.all(16),
                   itemCount: _notifications.length,
                   separatorBuilder: (_, __) => const Divider(height: 1, color: Color(0xFFF0F0F0)),
