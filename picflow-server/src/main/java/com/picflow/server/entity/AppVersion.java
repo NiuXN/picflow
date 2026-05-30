@@ -18,17 +18,20 @@ public class AppVersion {
     private String versionName;         // 版本号，如 1.0.0
     private Integer versionCode;        // 版本码，递增比较
     private String channel;             // 渠道：stable/beta/alpha
-    private Integer grayPercent;        // 灰度比例 0-100，100=全量
+    private Integer grayPercent;       // 灰度比例 0-100，100=全量
     private Integer minVersionCode;     // 适用版本下限，低于此强制更新
-    private Integer maxVersionCode;     // 适用版本上限，高于此忽略
-    private Boolean forceUpdate;        // 是否强制更新
-    private String description;         // 简短更新说明
-    private String releaseNotes;        // 详细发布日志（Markdown）
-    private String downloadUrl;         // 安装包下载链接
-    private String hotfixUrl;           // 热更新补丁链接（Shorebird）
-    private String platform;            // 目标平台：all/android/ios
-    private Boolean enabled;            // 是否启用
+    private Integer maxVersionCode;    // 适用版本上限，高于此忽略
+    private Boolean forceUpdate;       // 是否强制更新
+    private String description;        // 简短更新说明
+    private String releaseNotes;      // 详细发布日志（Markdown）
+    private String downloadUrl;       // 安装包下载链接
+    private String hotfixUrl;         // 热更新补丁链接（Shorebird）
+    private String platform;           // 目标平台：all/android/ios
+    private Boolean enabled;           // 是否启用
 
+    // 审计字段
     @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;    // 发布时间
+    private LocalDateTime createdAt;   // 发布时间
+    @TableField(fill = FieldFill.INSERT_UPDATE)
+    private LocalDateTime updatedAt;   // 更新时间
 }

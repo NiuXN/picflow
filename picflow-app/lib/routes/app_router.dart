@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../screens/home_screen.dart';
 import '../providers/auth_provider.dart';
 import '../screens/editor_screen.dart';
-import '../screens/square_screen.dart';
+import '../screens/template_square_screen.dart';
 import '../screens/artwork_detail_screen.dart';
 import '../screens/publish_screen.dart';
 import '../screens/profile_screen.dart';
@@ -64,10 +64,10 @@ final appRouter = GoRouter(
           ),
         ),
         GoRoute(
-          path: '/square',
+          path: '/templates',
           pageBuilder: (context, state) => CustomTransitionPage(
             key: state.pageKey,
-            child: const SquareScreen(),
+            child: const TemplateSquareScreen(),
             transitionsBuilder: (context, animation, secondaryAnimation, child) {
               return FadeTransition(opacity: animation, child: child);
             },
@@ -175,11 +175,11 @@ class MainShell extends ConsumerWidget {
                   onTap: () => context.go('/'),
                 ),
                 _NavItem(
-                  icon: Icons.explore_outlined,
-                  activeIcon: Icons.explore_rounded,
-                  label: '广场',
-                  isActive: location.startsWith('/square'),
-                  onTap: () => context.go('/square'),
+                  icon: Icons.dashboard_customize_outlined,
+                  activeIcon: Icons.dashboard_customize_rounded,
+                  label: '模板',
+                  isActive: location.startsWith('/templates'),
+                  onTap: () => context.go('/templates'),
                 ),
                 _NavItem(
                   icon: Icons.add_circle_outline,

@@ -7,7 +7,16 @@ spring:
   application:
     name: picflow-server
   profiles:
-    active: prod
+    active: dev
   jackson:
     property-naming-strategy: SNAKE_CASE
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true  # 驼峰转下划线（默认 true，显式配置）
+  global-config:
+    db-config:
+      logic-delete-field: deleted  # 逻辑删除字段
+      logic-delete-value: 1        # 逻辑删除值（已删除）
+      logic-not-delete-value: 0    # 逻辑未删除值（正常）
 

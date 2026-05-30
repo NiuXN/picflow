@@ -17,6 +17,7 @@ public class Like {
     private Long userId;                // 点赞用户ID
     private Long artworkId;             // 被点赞作品ID
 
+    // 审计字段 - SQL 只有 created_at
     @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;    // 点赞时间
+    private LocalDateTime createdAt;   // 点赞时间
 }

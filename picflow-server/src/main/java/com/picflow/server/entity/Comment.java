@@ -21,8 +21,13 @@ public class Comment {
     private Long parentId;              // 父评论ID（支持回复）
     private String status;              // 状态：published
 
+    // 审计字段
+    @TableLogic
+    private Integer deleted;            // 逻辑删除：0-正常 1-删除
     @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;    // 评论时间
+    private LocalDateTime createdAt;   // 评论时间
+    @TableField(fill = FieldFill.INSERT_UPDATE)
+    private LocalDateTime updatedAt;   // 更新时间
 
     @TableField(exist = false)
     private List<Comment> replies;      // 子回复列表（非数据库字段）

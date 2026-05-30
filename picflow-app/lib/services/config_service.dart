@@ -68,4 +68,6 @@ class ConfigService {
   Future<List<ConfigItem>> getFrames() => getConfigs('frame');
 
   Future<List<ConfigItem>> getFilters() => getConfigs('filter');
+
+  Future<List<ConfigItem>> getShareChannels() => getConfigs('share');
 }

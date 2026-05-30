@@ -33,6 +33,7 @@ public class Artwork {
     private Integer commentsCount;      // 评论数
     private String status;              // 状态：published/review/removed
     private Boolean isFeatured;         // 是否精选
+    @TableLogic
     private Integer deleted;            // 逻辑删除：0正常 1删除
 
     @TableField(fill = FieldFill.INSERT)

@@ -17,6 +17,7 @@ public class Favorite {
     private Long userId;                // 收藏用户ID
     private Long artworkId;             // 被收藏作品ID
 
+    // 审计字段 - SQL 只有 created_at
     @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;    // 收藏时间
+    private LocalDateTime createdAt;   // 收藏时间
 }

@@ -18,4 +18,14 @@ public interface UserService extends IService<User> {
     User getCurrentUser();
 
     Map<String, Object> getUserStats(Long userId);
+
+    /**
+     * 第三方登录/注册
+     * @param provider 登录平台：wechat/apple/google
+     * @param openId 第三方平台唯一标识
+     * @param nickname 用户昵称
+     * @param avatarUrl 用户头像
+     * @return 登录用户
+     */
+    User loginByOAuth(String provider, String openId, String nickname, String avatarUrl);
 }

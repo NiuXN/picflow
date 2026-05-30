@@ -22,11 +22,20 @@ public class User {
     private String phone;               // 手机号
     private Boolean phoneVerified;       // 手机号是否已验证
 
+    // ========================================
+    // 第三方登录字段
+    // ========================================
+    private String wechatOpenId;         // 微信 OpenId
+    private String wechatUnionId;        // 微信 UnionId
+    private String appleOpenId;          // Apple OpenId
+    private String googleOpenId;         // Google OpenId
+
     private String nickname;            // 昵称
     private String avatarUrl;           // 头像URL
     private String bio;                 // 个人简介
     private String role;                // 角色：user/admin
     private String status;              // 状态：active/banned
+    @TableLogic
     private Integer deleted;            // 逻辑删除：0正常 1删除
 
     @TableField(fill = FieldFill.INSERT)

@@ -6,15 +6,15 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_gallery_saver/image_gallery_saver.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
 import '../models/layout_model.dart';
 import '../models/image_model.dart';
 import '../providers/editor_provider.dart';
 import '../providers/image_provider.dart';
+import '../providers/share_config_provider.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import '../services/recent_works_service.dart';
+import '../services/share_service.dart';
 import '../utils/color_utils.dart';
 import '../widgets/editor/top_bar.dart';
 import '../widgets/editor/canvas_area.dart';
@@ -93,11 +93,11 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
     }
   }
 
-  void _showExportOptions(Uint8List imageBytes) {
+  void _showExportOptions(Uint8List imageBytes) async {
     final editorState = ref.read(editorProvider);
     final imageState = ref.read(imageProvider);
+    final shareConfig = ref.read(shareConfigProvider);
 
-    // 保存到最近作品
     RecentWorksService().save(
       ImageModel(
         path: imageState.path,
@@ -107,8 +107,13 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
       ),
     );
 
+    final tempFile = await ShareService.saveImageToTemp(imageBytes, 'picflow_export.png');
+
+    if (!mounted) return;
+
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -118,13 +123,16 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
             padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: AppColors.outlineVariant,
-                    borderRadius: BorderRadius.circular(4),
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: AppColors.outlineVariant,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -135,51 +143,12 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                 const SizedBox(height: 4),
                 Text(
                   '选择你要的操作',
-                  style: AppTypography.bodyRegular.copyWith(color: AppColors.onSurfaceVariant),
+                  style: AppTypography.bodyRegular
+                      .copyWith(color: AppColors.onSurfaceVariant),
                 ),
-                const SizedBox(height: 24),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _ExportOption(
-                        icon: Icons.photo_library_outlined,
-                        label: '保存到相册',
-                        onTap: () {
-                          Navigator.of(ctx).pop();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                '已保存到相册 ✧',
-                                style: AppTypography.labelMedium.copyWith(color: AppColors.surfaceContainerLowest),
-                              ),
-                              behavior: SnackBarBehavior.floating,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
-                              backgroundColor: AppColors.onSurface,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _ExportOption(
-                        icon: Icons.share_outlined,
-                        label: '分享',
-                        onTap: () async {
-                          Navigator.of(ctx).pop();
-                          final tempDir = await getTemporaryDirectory();
-                          final file = File('${tempDir.path}/picflow_export.png');
-                          await file.writeAsBytes(imageBytes);
-                          await Share.shareXFiles(
-                            [XFile(file.path)],
-                            text: '用 PicFlow 制作的图片 ✧',
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 20),
+                _buildShareGrid(ctx, tempFile, shareConfig.channels),
+                const SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -195,7 +164,7 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                     ),
-                    child: Text('发布到广场', style: AppTypography.labelLarge),
+                    child: Text('发布到模板广场', style: AppTypography.labelLarge),
                   ),
                 ),
               ],
@@ -203,6 +172,66 @@ class _EditorScreenState extends ConsumerState<EditorScreen> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildShareGrid(BuildContext ctx, File imageFile, List<ShareConfig> channels) {
+    final allChannels = [
+      const ShareConfig(
+        platform: SharePlatform.system,
+        label: '保存相册',
+        icon: Icons.photo_library,
+        sortOrder: 0,
+      ),
+      ...channels,
+    ]..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+
+    final crossAxisCount = MediaQuery.of(context).size.width > 400 ? 4 : 3;
+
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: crossAxisCount,
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
+      ),
+      itemCount: allChannels.length,
+      itemBuilder: (ctx, index) {
+        final config = allChannels[index];
+        return _ExportOption(
+          icon: config.icon,
+          label: config.label,
+          onTap: () async {
+            Navigator.of(ctx).pop();
+            await _handleShare(imageFile, config.platform);
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _handleShare(File imageFile, SharePlatform platform) async {
+    if (platform == SharePlatform.system) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '已保存到相册 ✧',
+            style: AppTypography.labelMedium
+                .copyWith(color: AppColors.surfaceContainerLowest),
+          ),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+          backgroundColor: AppColors.onSurface,
+        ),
+      );
+      return;
+    }
+
+    await ShareService.shareImage(
+      imageFile: imageFile,
+      text: '用 PicFlow 制作的图片 ✧',
+      targetPlatform: platform,
     );
   }
 

@@ -3,6 +3,7 @@ package com.picflow.server.controller;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.picflow.server.common.Result;
 import com.picflow.server.dto.LoginRequest;
+import com.picflow.server.dto.OAuthLoginRequest;
 import com.picflow.server.dto.RegisterRequest;
 import com.picflow.server.dto.UpdateProfileRequest;
 import com.picflow.server.entity.User;
@@ -129,5 +130,18 @@ public class AuthController {
         }
         userService.updateById(user);
         return Result.ok(user);
+    }
+
+    @PostMapping("/oauth-login")
+    @Operation(summary = "第三方登录")
+    public Result<Map<String, Object>> oauthLogin(@Valid @RequestBody OAuthLoginRequest request) {
+        User user = userService.loginByOAuth(
+                request.getProvider(),
+                request.getOpenId(),
+                request.getNickname(),
+                request.getAvatarUrl()
+        );
+        String token = jwtTokenProvider.generateToken(user.getId(), user.getUsername(), user.getRole());
+        return Result.ok(Map.of("token", token, "user", user));
     }
 }
