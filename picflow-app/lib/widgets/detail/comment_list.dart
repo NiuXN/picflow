@@ -50,7 +50,7 @@ class _CommentItem extends StatelessWidget {
             radius: 16,
             backgroundColor: AppColors.inversePrimary.withValues(alpha: 0.3),
             child: Text(
-              (comment.author?.nickname?.isNotEmpty == true ? comment.author!.nickname![0] : (comment.author?.username?.isNotEmpty == true ? comment.author!.username![0] : 'U')).toUpperCase(),
+              ((comment.author?.nickname?.isNotEmpty == true ? comment.author!.nickname : comment.author?.username) ?? 'U')[0].toUpperCase().toString(),
               style: const TextStyle(color: AppColors.onSurface, fontSize: 14),
             ),
           ),

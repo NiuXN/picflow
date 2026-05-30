@@ -55,12 +55,9 @@ class ProfileScreen extends ConsumerWidget {
                           : null,
                       child: user?.avatarUrl == null
                           ? Text(
-                              (user?.nickname?.isNotEmpty == true
-                                      ? user!.nickname![0]
-                                      : (user?.username?.isNotEmpty == true
-                                          ? user!.username![0]
-                                          : 'U'))
-                                  .toUpperCase(),
+                              ((user?.nickname?.isNotEmpty == true ? user!.nickname : user?.username) ?? 'U')[0]
+                                  .toUpperCase()
+                                  .toString(),
                               style: const TextStyle(color: AppColors.surfaceContainerLowest, fontSize: 24, fontWeight: FontWeight.w600),
                             )
                           : null,

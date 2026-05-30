@@ -14,7 +14,6 @@ class DesignPreferencesScreen extends ConsumerWidget {
     final settings = ref.watch(settingsProvider);
     final settingsNotifier = ref.read(settingsProvider.notifier);
     final frames = ref.watch(frameConfigProvider).frames;
-    final filters = ref.watch(filterConfigProvider).filters;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -34,7 +33,7 @@ class DesignPreferencesScreen extends ConsumerWidget {
           Text('默认相框', style: AppTypography.labelMedium.copyWith(fontWeight: FontWeight.w600)),
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(
-            value: settings.defaultFrameType,
+            initialValue: settings.defaultFrameType,
             decoration: _decoration(),
             items: frames.map((f) => DropdownMenuItem(
               value: f.type.name,
@@ -48,12 +47,12 @@ class DesignPreferencesScreen extends ConsumerWidget {
           Text('默认画面比例', style: AppTypography.labelMedium.copyWith(fontWeight: FontWeight.w600)),
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(
-            value: settings.defaultAspectRatio,
+            initialValue: settings.defaultAspectRatio,
             decoration: _decoration(),
             items: const [
-              DropdownMenuItem(value: '3x4', child: Text('3:4', style: AppTypography.bodyRegular)),
-              DropdownMenuItem(value: '1x1', child: Text('1:1', style: AppTypography.bodyRegular)),
-              DropdownMenuItem(value: '9x16', child: Text('9:16', style: AppTypography.bodyRegular)),
+              DropdownMenuItem(value: '3x4', child: Text('3:4')),
+              DropdownMenuItem(value: '1x1', child: Text('1:1')),
+              DropdownMenuItem(value: '9x16', child: Text('9:16')),
             ],
             onChanged: (v) {
               if (v != null) settingsNotifier.setDefaultAspectRatio(v);
@@ -67,7 +66,7 @@ class DesignPreferencesScreen extends ConsumerWidget {
             onChanged: (v) => settingsNotifier.setNotificationsEnabled(v),
             title: Text('接收推送通知', style: AppTypography.bodyRegular),
             contentPadding: EdgeInsets.zero,
-            activeColor: AppColors.inversePrimary,
+            activeThumbColor: AppColors.inversePrimary,
           ),
         ],
       ),

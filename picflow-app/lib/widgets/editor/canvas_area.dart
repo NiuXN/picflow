@@ -44,7 +44,7 @@ class CanvasArea extends ConsumerWidget {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(16),
-              child: _buildCanvasContent(imageState, editorState),
+              child: _buildCanvasContent(imageState, editorState, ref),
             ),
             if (showGrid) _buildGridOverlay(),
           ],
@@ -53,7 +53,7 @@ class CanvasArea extends ConsumerWidget {
     );
   }
 
-  Widget _buildCanvasContent(ImageModel imageState, EditorState editorState) {
+  Widget _buildCanvasContent(ImageModel imageState, EditorState editorState, WidgetRef ref) {
     if (!imageState.isLoaded || imageState.path == null) {
       return Center(
         child: Column(
@@ -77,11 +77,11 @@ class CanvasArea extends ConsumerWidget {
     }
 
     return Center(
-      child: _buildFramedImage(imageState, editorState),
+      child: _buildFramedImage(imageState, editorState, ref),
     );
   }
 
-  Widget _buildFramedImage(ImageModel imageState, EditorState editorState) {
+  Widget _buildFramedImage(ImageModel imageState, EditorState editorState, WidgetRef ref) {
     final rawImage = _buildImageWidget(imageState.path!);
     final filteredImage = _applyFilter(rawImage, editorState, ref);
     final image = _applyWatermark(filteredImage, editorState);

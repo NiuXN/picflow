@@ -33,7 +33,7 @@ class ArtworkService {
       final hasMore = response.data!.length >= size;
       return (response.data!, hasMore);
     }
-    return ([], false);
+    return (<ArtworkModel>[], false);
   }
 
   Future<(List<ArtworkModel>, bool)> getMyArtworks({
@@ -55,7 +55,7 @@ class ArtworkService {
       final hasMore = response.data!.length >= size;
       return (response.data!, hasMore);
     }
-    return ([], false);
+    return (<ArtworkModel>[], false);
   }
 
   Future<ArtworkModel?> getArtwork(int id) async {

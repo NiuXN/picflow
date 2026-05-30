@@ -52,23 +52,27 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Future<void> _load() async {
     setState(() => _isLoading = true);
     final items = await _service.getNotifications(page: 1);
-    if (mounted) setState(() {
-      _notifications = items;
-      _hasMore = items.length >= 20;
-      _page = 1;
-      _isLoading = false;
-    });
+    if (mounted) {
+      setState(() {
+        _notifications = items;
+        _hasMore = items.length >= 20;
+        _page = 1;
+        _isLoading = false;
+      });
+    }
   }
 
   Future<void> _loadMore() async {
     setState(() => _isLoading = true);
     final items = await _service.getNotifications(page: _page + 1);
-    if (mounted) setState(() {
-      _notifications.addAll(items);
-      _hasMore = items.length >= 20;
-      _page++;
-      _isLoading = false;
-    });
+    if (mounted) {
+      setState(() {
+        _notifications.addAll(items);
+        _hasMore = items.length >= 20;
+        _page++;
+        _isLoading = false;
+      });
+    }
   }
 
   @override
