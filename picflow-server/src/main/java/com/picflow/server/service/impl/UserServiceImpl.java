@@ -4,16 +4,18 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.picflow.server.common.BusinessException;
 import com.picflow.server.common.ErrorCode;
+import com.picflow.server.entity.Artwork;
 import com.picflow.server.entity.User;
 import com.picflow.server.mapper.UserMapper;
 import com.picflow.server.security.JwtTokenProvider;
-import com.picflow.server.entity.Artwork;
 import com.picflow.server.service.ArtworkService;
 import com.picflow.server.service.FavoriteService;
 import com.picflow.server.service.FollowService;
 import com.picflow.server.service.LikeService;
 import com.picflow.server.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -28,10 +30,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
-    private final ArtworkService artworkService;
     private final LikeService likeService;
     private final FavoriteService favoriteService;
     private final FollowService followService;
+
+    @Lazy
+    @Autowired
+    private ArtworkService artworkService;
 
     @Override
     public User register(String username, String password, String nickname) {

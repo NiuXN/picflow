@@ -17,7 +17,9 @@ import com.picflow.server.service.LikeService;
 import com.picflow.server.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -37,8 +39,11 @@ public class ArtworkServiceImpl extends ServiceImpl<ArtworkMapper, Artwork> impl
     private final ArtworkTagMapper artworkTagMapper;
     private final LikeService likeService;
     private final FavoriteService favoriteService;
-    private final UserService userService;
     private final CacheManager cacheManager;
+
+    @Autowired
+    @Lazy
+    private UserService userService;
 
     @Override
     public PageResult<Artwork> getArtworks(Long userId, int page, int size, String sort, String tag) {

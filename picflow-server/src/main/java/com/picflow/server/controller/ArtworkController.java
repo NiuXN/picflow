@@ -16,7 +16,6 @@ import com.picflow.server.service.FavoriteService;
 import com.picflow.server.service.LikeService;
 import com.picflow.server.service.TagService;
 import com.picflow.server.service.AppConfigService;
-import com.picflow.server.entity.Tag;
 import com.picflow.server.entity.AppConfig;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -103,8 +102,8 @@ public class ArtworkController {
     @GetMapping("/tags")
     @Operation(summary = "获取所有标签")
     public Result<Map<String, Object>> tags() {
-        List<Tag> tags = tagService.getEnabledTags();
-        List<String> tagNames = tags.stream().map(Tag::getName).toList();
+        List<com.picflow.server.entity.Tag> tags = tagService.getEnabledTags();
+        List<String> tagNames = tags.stream().map(com.picflow.server.entity.Tag::getName).toList();
         return Result.ok(Map.of("items", tagNames));
     }
 

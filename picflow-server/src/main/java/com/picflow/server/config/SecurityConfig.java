@@ -33,6 +33,8 @@ public class SecurityConfig {
                     "/public/**",
                     "/notifications/**",
                     "/uploads/**",
+                    "/artworks/tags",
+                    "/artworks/configs",
                     "/doc.html",
                     "/webjars/**",
                     "/v3/api-docs/**",

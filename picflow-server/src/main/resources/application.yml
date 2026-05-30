@@ -7,7 +7,7 @@ spring:
   application:
     name: picflow-server
   profiles:
-    active: dev
+    active: ${SPRING_PROFILES_ACTIVE:prod}
   jackson:
     property-naming-strategy: SNAKE_CASE
 

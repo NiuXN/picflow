@@ -11,6 +11,10 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash VARCHAR(255) NOT NULL COMMENT 'BCrypt 加密密码',
     phone         VARCHAR(20) UNIQUE COMMENT '手机号，唯一',
     phone_verified TINYINT(1) DEFAULT 0 COMMENT '手机号是否已验证',
+    wechat_open_id VARCHAR(100) COMMENT '微信OpenId',
+    wechat_union_id VARCHAR(100) COMMENT '微信UnionId',
+    apple_open_id VARCHAR(100) COMMENT 'Apple OpenId',
+    google_open_id VARCHAR(100) COMMENT 'Google OpenId',
     nickname      VARCHAR(100) DEFAULT 'PicFlow用户' COMMENT '用户昵称',
     avatar_url    VARCHAR(500) COMMENT '头像URL',
     bio           VARCHAR(500) COMMENT '个人简介',
@@ -153,6 +157,7 @@ CREATE TABLE IF NOT EXISTS tags (
     sort_order  INT DEFAULT 0 COMMENT '排序权重，越小越靠前',
     enabled     TINYINT(1) DEFAULT 1 COMMENT '是否启用：0禁用 1启用',
     created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     UNIQUE KEY uk_tags_name (name) COMMENT '标签名唯一'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='标签管理表';
 
